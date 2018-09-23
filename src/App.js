@@ -1,13 +1,15 @@
 import React, { Component } from "react";
 import "./App.css";
 import Slider from "react-slick";
-import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc';
+import {
+  SortableContainer,
+  SortableElement,
+  arrayMove
+} from "react-sortable-hoc";
 
-const SortableItem = SortableElement(({value}) =>
-  <li>{value}</li>
-);
+const SortableItem = SortableElement(({ value }) => <li>{value}</li>);
 
-const SortableList = SortableContainer(({items}) => {
+const SortableList = SortableContainer(({ items }) => {
   return (
     <ul>
       {items.map((value, index) => (
@@ -26,14 +28,24 @@ class App extends Component {
     };
   }
 
+  componentDidMount() {
+    const images = JSON.parse(localStorage.getItem("images"));
+    const names = JSON.parse(localStorage.getItem("names"));
+    if (images && names) {
+      this.setState({ images, names });
+    }
+  }
+
   dropHandler = ev => {
     ev.preventDefault();
-    const {images, names} = this.state;
-    let name = ''
+    const { images, names } = this.state;
+    let name = "";
     let reader = new FileReader();
     reader.onload = e => {
-      images.push(e.target.result)
-      names.push(name)
+      images.push(e.target.result);
+      names.push(name);
+      localStorage.setItem("images", JSON.stringify(images));
+      localStorage.setItem("names", JSON.stringify(names));
       this.setState({ images, names });
     };
     // Prevent default behavior (Prevent file from being opened)
@@ -43,7 +55,7 @@ class App extends Component {
         // If dropped items aren't files, reject them
         if (ev.dataTransfer.items[i].kind === "file") {
           const file = ev.dataTransfer.items[i].getAsFile();
-          name = file.name
+          name = file.name;
           reader.readAsDataURL(file);
         }
       }
@@ -72,22 +84,24 @@ class App extends Component {
         <div className="slider" key={i}>
           <img className="image" src={image} alt="carousel" />
         </div>
-      )
-    })
-  }
+      );
+    });
+  };
 
   renderNames = () => {
     return this.state.names.map((name, i) => {
-      return (
-        <p key={i}>{name}</p>
-      )
-    })
-  }
+      return <p key={i}>{name}</p>;
+    });
+  };
 
-  onSortEnd = ({oldIndex, newIndex}) => {
+  onSortEnd = ({ oldIndex, newIndex }) => {
+    const names = arrayMove(this.state.names, oldIndex, newIndex)
+    const images = arrayMove(this.state.images, oldIndex, newIndex)
+    localStorage.setItem("images", JSON.stringify(images));
+    localStorage.setItem("names", JSON.stringify(names));
     this.setState({
-      names: arrayMove(this.state.names, oldIndex, newIndex),
-      images: arrayMove(this.state.images, oldIndex, newIndex),
+      names,
+      images,
     });
   };
 
@@ -101,9 +115,7 @@ class App extends Component {
     };
     return (
       <div className="App">
-        <Slider {...settings}>
-          {this.renderImages()}
-        </Slider>
+        <Slider {...settings}>{this.renderImages()}</Slider>
         <SortableList items={this.state.names} onSortEnd={this.onSortEnd} />
         <div
           id="drop_zone"
