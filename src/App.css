@@ -1,0 +1,13 @@
+.App {
+  text-align: center;
+}
+
+#drop_zone {
+  border: black solid 1px;
+  height: 100px;
+}
+
+.slider {
+  height: 200px;
+  width: 200px;
+}
