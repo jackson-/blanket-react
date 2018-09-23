@@ -1,23 +1,40 @@
 import React, { Component } from "react";
 import "./App.css";
 import Slider from "react-slick";
+import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc';
+
+const SortableItem = SortableElement(({value}) =>
+  <li>{value}</li>
+);
+
+const SortableList = SortableContainer(({items}) => {
+  return (
+    <ul>
+      {items.map((value, index) => (
+        <SortableItem key={`item-${index}`} index={index} value={value} />
+      ))}
+    </ul>
+  );
+});
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      images: []
+      images: [],
+      names: []
     };
   }
 
   dropHandler = ev => {
     ev.preventDefault();
-    const {images} = this.state;
+    const {images, names} = this.state;
+    let name = ''
     let reader = new FileReader();
     reader.onload = e => {
       images.push(e.target.result)
-      console.log("IMAGES", images)
-      this.setState({ images });
+      names.push(name)
+      this.setState({ images, names });
     };
     // Prevent default behavior (Prevent file from being opened)
     if (ev.dataTransfer.items) {
@@ -26,6 +43,7 @@ class App extends Component {
         // If dropped items aren't files, reject them
         if (ev.dataTransfer.items[i].kind === "file") {
           const file = ev.dataTransfer.items[i].getAsFile();
+          name = file.name
           reader.readAsDataURL(file);
         }
       }
@@ -35,8 +53,6 @@ class App extends Component {
   };
 
   removeDragData = ev => {
-    console.log("Removing drag data");
-
     if (ev.dataTransfer.items) {
       // Use DataTransferItemList interface to remove the drag data
       ev.dataTransfer.items.clear();
@@ -52,14 +68,28 @@ class App extends Component {
 
   renderImages = () => {
     return this.state.images.map((image, i) => {
-      console.log("IMAGE", image)
       return (
-        <div  className="slider" key={i}>
+        <div className="slider" key={i}>
           <img className="image" src={image} alt="carousel" />
         </div>
       )
     })
   }
+
+  renderNames = () => {
+    return this.state.names.map((name, i) => {
+      return (
+        <p key={i}>{name}</p>
+      )
+    })
+  }
+
+  onSortEnd = ({oldIndex, newIndex}) => {
+    this.setState({
+      names: arrayMove(this.state.names, oldIndex, newIndex),
+      images: arrayMove(this.state.images, oldIndex, newIndex),
+    });
+  };
 
   render() {
     var settings = {
@@ -74,6 +104,7 @@ class App extends Component {
         <Slider {...settings}>
           {this.renderImages()}
         </Slider>
+        <SortableList items={this.state.names} onSortEnd={this.onSortEnd} />
         <div
           id="drop_zone"
           onDragOver={this.dragging}
